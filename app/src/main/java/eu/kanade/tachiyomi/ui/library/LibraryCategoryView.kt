@@ -77,6 +77,7 @@ class LibraryCategoryView @JvmOverloads constructor(context: Context, attrs: Att
 
         recycler.setHasFixedSize(true)
         recycler.adapter = adapter
+        adapter?.fastScroller = fast_scroller
         swipe_refresh.addView(recycler)
 
         recycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
