@@ -12,11 +12,19 @@ The rest of this readme will contain information specific to my own build. More 
 
 Features include:
 
--   Fast Scrollbar for Library view (why is it not in the original?)
+-   Fast Scrollbar for Library
+
+-   Fast Scrollbar for Library updates
+
+-   Fast Scrollbar for Recently read
+
+-   Fast Scrollbar for Catalogue
+
+-   Fast Scrollbar for Catalogue browsing
 
 ## Changes
 
--   None yet
+-   Increased Recently read limit (from 25 to 50)
 
 ## Fixes
 

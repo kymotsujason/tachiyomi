@@ -100,6 +100,7 @@ class CatalogueController : NucleusController<CataloguePresenter>(),
         // Create recycler and set adapter.
         recycler.layoutManager = LinearLayoutManager(view.context)
         recycler.adapter = adapter
+        adapter?.fastScroller = fast_scroller
         recycler.addItemDecoration(SourceDividerItemDecoration(view.context))
 
         requestPermissionsSafe(arrayOf(WRITE_EXTERNAL_STORAGE), 301)

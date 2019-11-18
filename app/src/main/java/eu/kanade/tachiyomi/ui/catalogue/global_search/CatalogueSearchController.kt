@@ -133,6 +133,7 @@ open class CatalogueSearchController(
         // Create recycler and set adapter.
         recycler.layoutManager = LinearLayoutManager(view.context)
         recycler.adapter = adapter
+        adapter?.fastScroller = fast_scroller
     }
 
     override fun onDestroyView(view: View) {

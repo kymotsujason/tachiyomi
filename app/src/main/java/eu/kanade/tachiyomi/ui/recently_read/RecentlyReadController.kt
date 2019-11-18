@@ -58,6 +58,7 @@ class RecentlyReadController : NucleusController<RecentlyReadPresenter>(),
         adapter = RecentlyReadAdapter(this@RecentlyReadController)
         recycler.setHasFixedSize(true)
         recycler.adapter = adapter
+        adapter?.fastScroller = fast_scroller
     }
 
     override fun onDestroyView(view: View) {

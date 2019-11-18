@@ -74,6 +74,7 @@ class RecentChaptersController : NucleusController<RecentChaptersPresenter>(),
         recycler.setHasFixedSize(true)
         adapter = RecentChaptersAdapter(this@RecentChaptersController)
         recycler.adapter = adapter
+        adapter?.fastScroller = fast_scroller
 
         recycler.scrollStateChanges().subscribeUntilDestroy {
             // Disable swipe refresh when view is not at the top

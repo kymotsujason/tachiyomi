@@ -197,6 +197,7 @@ open class BrowseCatalogueController(bundle: Bundle) :
         }
         recycler.setHasFixedSize(true)
         recycler.adapter = adapter
+        adapter?.fastScroller = fast_scroller
 
         catalogue_view.addView(recycler, 1)
 
