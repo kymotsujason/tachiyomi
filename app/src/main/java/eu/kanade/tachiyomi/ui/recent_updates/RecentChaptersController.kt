@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.ui.recent_updates
 
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.view.ActionMode
-import android.support.v7.widget.DividerItemDecoration
-import android.support.v7.widget.LinearLayoutManager
 import android.view.*
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ActionMode
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.jakewharton.rxbinding.support.v4.widget.refreshes
 import com.jakewharton.rxbinding.support.v7.widget.scrollStateChanges
 import eu.davidea.flexibleadapter.FlexibleAdapter
@@ -19,8 +19,10 @@ import eu.kanade.tachiyomi.ui.base.controller.popControllerWithTag
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.manga.MangaController
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
-import eu.kanade.tachiyomi.util.toast
-import kotlinx.android.synthetic.main.recent_chapters_controller.*
+import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.android.synthetic.main.recent_chapters_controller.empty_view
+import kotlinx.android.synthetic.main.recent_chapters_controller.recycler
+import kotlinx.android.synthetic.main.recent_chapters_controller.swipe_refresh
 import timber.log.Timber
 
 /**
@@ -112,7 +114,7 @@ class RecentChaptersController : NucleusController<RecentChaptersPresenter>(),
      * Called when item in list is clicked
      * @param position position of clicked item
      */
-    override fun onItemClick(position: Int): Boolean {
+    override fun onItemClick(view: View, position: Int): Boolean {
         val adapter = adapter ?: return false
 
         // Get item from position

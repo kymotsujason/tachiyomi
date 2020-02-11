@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.extension
 
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.SearchView
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import androidx.appcompat.widget.SearchView
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.bluelinelabs.conductor.ControllerChangeHandler
+import com.bluelinelabs.conductor.ControllerChangeType
+import com.bluelinelabs.conductor.RouterTransaction
+import com.bluelinelabs.conductor.changehandler.FadeChangeHandler
 import com.jakewharton.rxbinding.support.v4.widget.refreshes
 import com.jakewharton.rxbinding.support.v7.widget.queryTextChanges
 import eu.davidea.flexibleadapter.FlexibleAdapter
@@ -15,7 +15,8 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.base.controller.NucleusController
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
-import kotlinx.android.synthetic.main.extension_controller.*
+import kotlinx.android.synthetic.main.extension_controller.ext_recycler
+import kotlinx.android.synthetic.main.extension_controller.ext_swipe_refresh
 
 
 /**
@@ -73,6 +74,25 @@ open class ExtensionController : NucleusController<ExtensionPresenter>(),
         super.onDestroyView(view)
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_search -> expandActionViewFromInteraction = true
+            R.id.action_settings -> {
+                router.pushController((RouterTransaction.with(ExtensionFilterController()))
+                        .popChangeHandler(SettingsExtensionsFadeChangeHandler())
+                        .pushChangeHandler(FadeChangeHandler()))
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    override fun onChangeStarted(handler: ControllerChangeHandler, type: ControllerChangeType) {
+        super.onChangeStarted(handler, type)
+        if (!type.isPush && handler is SettingsExtensionsFadeChangeHandler) {
+            presenter.findAvailableExtensions()
+        }
+    }
+
     override fun onButtonClick(position: Int) {
         val extension = (adapter?.getItem(position) as? ExtensionItem)?.extension ?: return
         when (extension) {
@@ -99,7 +119,7 @@ open class ExtensionController : NucleusController<ExtensionPresenter>(),
         val searchView = searchItem.actionView as SearchView
         searchView.maxWidth = Int.MAX_VALUE
 
-        if (!query.isEmpty()) {
+        if (query.isNotEmpty()) {
             searchItem.expandActionView()
             searchView.setQuery(query, true)
             searchView.clearFocus()
@@ -113,10 +133,10 @@ open class ExtensionController : NucleusController<ExtensionPresenter>(),
             }
 
         // Fixes problem with the overflow icon showing up in lieu of search
-        searchItem.fixExpand()
+        searchItem.fixExpand(onExpand = { invalidateMenuOnExpand() })
     }
 
-    override fun onItemClick(position: Int): Boolean {
+    override fun onItemClick(view: View, position: Int): Boolean {
         val extension = (adapter?.getItem(position) as? ExtensionItem)?.extension ?: return false
         if (extension is Extension.Installed) {
             openDetails(extension)
@@ -173,4 +193,5 @@ open class ExtensionController : NucleusController<ExtensionPresenter>(),
         presenter.uninstallExtension(pkgName)
     }
 
+    class SettingsExtensionsFadeChangeHandler : FadeChangeHandler()
 }

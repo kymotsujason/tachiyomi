@@ -5,11 +5,10 @@ import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.support.v4.content.ContextCompat
-import android.support.v7.preference.PreferenceScreen
+import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceScreen
 import com.afollestad.materialdialogs.MaterialDialog
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.R
@@ -17,7 +16,8 @@ import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.preference.getOrDefault
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
-import eu.kanade.tachiyomi.util.getFilePicker
+import eu.kanade.tachiyomi.util.preference.*
+import eu.kanade.tachiyomi.util.system.getFilePicker
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -107,18 +107,16 @@ class SettingsDownloadController : SettingsController() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
-            DOWNLOAD_DIR_PRE_L -> if (data != null && resultCode == Activity.RESULT_OK) {
-                val uri = Uri.fromFile(File(data.data.path))
-                preferences.downloadsDirectory().set(uri.toString())
-            }
-            DOWNLOAD_DIR_L -> if (data != null && resultCode == Activity.RESULT_OK) {
+            DOWNLOAD_DIR -> if (data != null && resultCode == Activity.RESULT_OK) {
                 val context = applicationContext ?: return
                 val uri = data.data
                 val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
-                @Suppress("NewApi")
-                context.contentResolver.takePersistableUriPermission(uri, flags)
+                if (uri != null) {
+                    @Suppress("NewApi")
+                    context.contentResolver.takePersistableUriPermission(uri, flags)
+                }
 
                 val file = UniFile.fromUri(context, uri)
                 preferences.downloadsDirectory().set(file.uri.toString())
@@ -132,19 +130,11 @@ class SettingsDownloadController : SettingsController() {
     }
 
     fun customDirectorySelected(currentDir: String) {
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            startActivityForResult(preferences.context.getFilePicker(currentDir), DOWNLOAD_DIR_PRE_L)
-        } else {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-            try {
-                startActivityForResult(intent, DOWNLOAD_DIR_L)
-            } catch (e: ActivityNotFoundException) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    startActivityForResult(preferences.context.getFilePicker(currentDir), DOWNLOAD_DIR_L)
-                }
-            }
-
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        try {
+            startActivityForResult(intent, DOWNLOAD_DIR)
+        } catch (e: ActivityNotFoundException) {
+            startActivityForResult(preferences.context.getFilePicker(currentDir), DOWNLOAD_DIR)
         }
     }
 
@@ -160,7 +150,7 @@ class SettingsDownloadController : SettingsController() {
 
             return MaterialDialog.Builder(activity)
                     .items(externalDirs)
-                    .itemsCallbackSingleChoice(selectedIndex, { _, _, which, text ->
+                    .itemsCallbackSingleChoice(selectedIndex) { _, _, which, text ->
                         val target = targetController as? SettingsDownloadController
                         if (which == externalDirs.lastIndex) {
                             target?.customDirectorySelected(currentDir)
@@ -168,7 +158,7 @@ class SettingsDownloadController : SettingsController() {
                             target?.predefinedDirectorySelected(text.toString())
                         }
                         true
-                    })
+                    }
                     .build()
         }
 
@@ -183,7 +173,6 @@ class SettingsDownloadController : SettingsController() {
     }
 
     private companion object {
-        const val DOWNLOAD_DIR_PRE_L = 103
-        const val DOWNLOAD_DIR_L = 104
+        const val DOWNLOAD_DIR = 104
     }
 }

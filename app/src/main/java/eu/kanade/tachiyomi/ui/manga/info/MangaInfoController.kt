@@ -8,19 +8,17 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.support.customtabs.CustomTabsIntent
-import android.support.v4.content.pm.ShortcutInfoCompat
-import android.support.v4.content.pm.ShortcutManagerCompat
-import android.support.v4.graphics.drawable.IconCompat
 import android.view.*
 import android.widget.Toast
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import com.afollestad.materialdialogs.MaterialDialog
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.jakewharton.rxbinding.support.v4.widget.refreshes
 import com.jakewharton.rxbinding.view.clicks
@@ -31,6 +29,7 @@ import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.glide.GlideApp
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
+import eu.kanade.tachiyomi.data.preference.getOrDefault
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
@@ -39,15 +38,14 @@ import eu.kanade.tachiyomi.ui.base.controller.NucleusController
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.catalogue.global_search.CatalogueSearchController
 import eu.kanade.tachiyomi.ui.library.ChangeMangaCategoriesDialog
+import eu.kanade.tachiyomi.ui.library.LibraryController
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.manga.MangaController
-import eu.kanade.tachiyomi.util.getResourceColor
-import eu.kanade.tachiyomi.util.openInBrowser
-import eu.kanade.tachiyomi.util.snack
-import eu.kanade.tachiyomi.util.toast
-import eu.kanade.tachiyomi.util.truncateCenter
+import eu.kanade.tachiyomi.ui.webview.WebViewActivity
+import eu.kanade.tachiyomi.util.lang.truncateCenter
+import eu.kanade.tachiyomi.util.system.toast
+import eu.kanade.tachiyomi.util.view.snack
 import jp.wasabeef.glide.transformations.CropSquareTransformation
-import jp.wasabeef.glide.transformations.MaskTransformation
 import kotlinx.android.synthetic.main.manga_info_controller.*
 import uy.kohesive.injekt.injectLazy
 import java.text.DateFormat
@@ -66,6 +64,10 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
      * Preferences helper.
      */
     private val preferences: PreferencesHelper by injectLazy()
+
+    private val dateFormat: DateFormat by lazy {
+        preferences.dateFormat().getOrDefault()
+    }
 
     init {
         setHasOptionsMenu(true)
@@ -122,12 +124,11 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
             copyToClipboard(view.context.getString(R.string.description), manga_summary.text.toString())
         }
 
-        //manga_genres_tags.setOnTagClickListener { tag -> performGlobalSearch(tag) }
+        manga_genres_tags.setOnTagClickListener { tag -> performLocalSearch(tag) }
 
         manga_cover.longClicks().subscribeUntilDestroy {
             copyToClipboard(view.context.getString(R.string.title), presenter.manga.title)
         }
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -136,13 +137,11 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.action_open_in_browser -> openInBrowser()
             R.id.action_open_in_web_view -> openInWebView()
             R.id.action_share -> shareManga()
             R.id.action_add_to_home_screen -> addToHomeScreen()
-            else -> return super.onOptionsItemSelected(item)
         }
-        return true
+        return super.onOptionsItemSelected(item)
     }
 
     /**
@@ -195,11 +194,7 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
         }
 
         // If manga source is known update source TextView.
-        manga_source.text = if (source == null) {
-            view.context.getString(R.string.unknown)
-        } else {
-            source.toString()
-        }
+        manga_source.text = source?.toString() ?: view.context.getString(R.string.unknown)
 
         // Update genres list
         if (manga.genre.isNullOrBlank().not()) {
@@ -262,7 +257,7 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
 
     fun setLastUpdateDate(date: Date) {
         if (date.time != 0L) {
-            manga_last_update?.text = DateFormat.getDateInstance(DateFormat.SHORT).format(date)
+            manga_last_update?.text = dateFormat.format(date)
         } else {
             manga_last_update?.text = resources?.getString(R.string.unknown)
         }
@@ -284,27 +279,18 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
         }
     }
 
-    /**
-     * Open the manga in browser.
-     */
-    private fun openInBrowser() {
-        val context = view?.context ?: return
-        val source = presenter.source as? HttpSource ?: return
-
-        context.openInBrowser(source.mangaDetailsRequest(presenter.manga).url().toString())
-    }
-
     private fun openInWebView() {
         val source = presenter.source as? HttpSource ?: return
 
         val url = try {
-            source.mangaDetailsRequest(presenter.manga).url().toString()
+            source.mangaDetailsRequest(presenter.manga).url.toString()
         } catch (e: Exception) {
             return
         }
 
-        parentController?.router?.pushController(MangaWebViewController(source.id, url)
-            .withFadeTransaction())
+        val activity = activity ?: return
+        val intent = WebViewActivity.newIntent(activity, source.id, url, presenter.manga.title)
+        startActivity(intent)
     }
 
     /**
@@ -315,7 +301,7 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
 
         val source = presenter.source as? HttpSource ?: return
         try {
-            val url = source.mangaDetailsRequest(presenter.manga).url().toString()
+            val url = source.mangaDetailsRequest(presenter.manga).url.toString()
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, url)
@@ -457,8 +443,7 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
         override fun onCreateDialog(savedViewState: Bundle?): Dialog {
             val modes = intArrayOf(R.string.circular_icon,
                     R.string.rounded_icon,
-                    R.string.square_icon,
-                    R.string.star_icon)
+                    R.string.square_icon)
 
             return MaterialDialog.Builder(activity!!)
                     .title(R.string.icon_shape)
@@ -488,10 +473,9 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
                         0 -> circleCrop()
                         1 -> transform(RoundedCorners(5))
                         2 -> transform(CropSquareTransformation())
-                        3 -> centerCrop().transform(MaskTransformation(R.drawable.mask_star))
                     }
                 }
-                .into(object : SimpleTarget<Bitmap>(96, 96) {
+                .into(object : CustomTarget<Bitmap>(96, 96) {
                     override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
                         createShortcut(resource)
                     }
@@ -499,6 +483,8 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
                     override fun onLoadFailed(errorDrawable: Drawable?) {
                         activity?.toast(R.string.icon_creation_fail)
                     }
+
+                    override fun onLoadCleared(placeholder: Drawable?) { }
                 })
     }
 
@@ -515,7 +501,7 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
         val view = view ?: return
 
         val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.primaryClip = ClipData.newPlainText(label, content)
+        clipboard.setPrimaryClip(ClipData.newPlainText(label, content))
 
         activity.toast(view.context.getString(R.string.copied_to_clipboard, content.truncateCenter(20)),
                 Toast.LENGTH_SHORT)
@@ -526,9 +512,23 @@ class MangaInfoController : NucleusController<MangaInfoPresenter>(),
      *
      * @param query the search query to pass to the search controller
      */
-    fun performGlobalSearch(query: String) {
+    private fun performGlobalSearch(query: String) {
         val router = parentController?.router ?: return
         router.pushController(CatalogueSearchController(query).withFadeTransaction())
+    }
+
+    /**
+     * Perform a local search using the provided query.
+     *
+     * @param query the search query to pass to the library controller
+     */
+    private fun performLocalSearch(query: String) {
+        val router = parentController?.router ?: return
+        val firstController = router.backstack.first()?.controller()
+        if (firstController is LibraryController && router.backstack.size == 2) {
+            router.handleBack()
+            firstController.search(query)
+        }
     }
 
     /**

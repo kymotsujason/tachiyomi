@@ -3,16 +3,15 @@ package eu.kanade.tachiyomi.ui.extension
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
-import android.support.v7.preference.*
-import android.support.v7.preference.internal.AbstractMultiSelectListPreference
-import android.support.v7.widget.DividerItemDecoration
-import android.support.v7.widget.DividerItemDecoration.VERTICAL
-import android.support.v7.widget.LinearLayoutManager
 import android.util.TypedValue
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.preference.*
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.DividerItemDecoration.VERTICAL
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.jakewharton.rxbinding.view.clicks
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.EmptyPreferenceDataStore
@@ -21,8 +20,8 @@ import eu.kanade.tachiyomi.source.ConfigurableSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.online.LoginSource
 import eu.kanade.tachiyomi.ui.base.controller.NucleusController
-import eu.kanade.tachiyomi.ui.setting.preferenceCategory
-import eu.kanade.tachiyomi.util.LocaleHelper
+import eu.kanade.tachiyomi.util.preference.preferenceCategory
+import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.widget.preference.LoginPreference
 import eu.kanade.tachiyomi.widget.preference.SourceLoginDialog
 import kotlinx.android.synthetic.main.extension_detail_controller.*
@@ -43,7 +42,9 @@ class ExtensionDetailsController(bundle: Bundle? = null) :
     })
 
     override fun inflateView(inflater: LayoutInflater, container: ViewGroup): View {
-        return inflater.inflate(R.layout.extension_detail_controller, container, false)
+        val themedInflater = inflater.cloneInContext(getPreferenceThemeContext())
+
+        return themedInflater.inflate(R.layout.extension_detail_controller, container, false)
     }
 
     override fun createPresenter(): ExtensionDetailsPresenter {
@@ -68,6 +69,10 @@ class ExtensionDetailsController(bundle: Bundle? = null) :
         extension.getApplicationIcon(context)?.let { extension_icon.setImageDrawable(it) }
         extension_uninstall_button.clicks().subscribeUntilDestroy {
             presenter.uninstallExtension()
+        }
+
+        if (extension.isObsolete) {
+            extension_obsolete.visibility = View.VISIBLE
         }
 
         val themedContext by lazy { getPreferenceThemeContext() }
@@ -136,10 +141,14 @@ class ExtensionDetailsController(bundle: Bundle? = null) :
             val newScreen = screen.preferenceManager.createPreferenceScreen(context)
             source.setupPreferenceScreen(newScreen)
 
-            for (i in 0 until newScreen.preferenceCount) {
-                val pref = newScreen.getPreference(i)
+            // Reparent the preferences
+            while (newScreen.preferenceCount != 0) {
+                val pref = newScreen.getPreference(0)
+                pref.isIconSpaceReserved = false
                 pref.preferenceDataStore = dataStore
                 pref.order = Int.MAX_VALUE // reset to default order
+
+                newScreen.removePreference(pref)
                 screen.addPreference(pref)
             }
         }
@@ -165,7 +174,7 @@ class ExtensionDetailsController(bundle: Bundle? = null) :
                     .newInstance(preference.getKey())
             is ListPreference -> ListPreferenceDialogController
                     .newInstance(preference.getKey())
-            is AbstractMultiSelectListPreference -> MultiSelectListPreferenceDialogController
+            is MultiSelectListPreference -> MultiSelectListPreferenceDialogController
                     .newInstance(preference.getKey())
             else -> throw IllegalArgumentException("Tried to display dialog for unknown " +
                     "preference type. Did you forget to override onDisplayPreferenceDialog()?")
@@ -174,8 +183,8 @@ class ExtensionDetailsController(bundle: Bundle? = null) :
         f.showDialog(router)
     }
 
-    override fun findPreference(key: CharSequence?): Preference {
-        return preferenceScreen!!.getPreference(lastOpenPreferencePosition!!)
+    override fun <T : Preference> findPreference(key: CharSequence): T? {
+        return preferenceScreen!!.findPreference(key)
     }
 
     override fun loginDialogClosed(source: LoginSource) {

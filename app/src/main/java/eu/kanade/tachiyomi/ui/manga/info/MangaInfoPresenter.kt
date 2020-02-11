@@ -11,14 +11,14 @@ import eu.kanade.tachiyomi.data.database.models.MangaCategory
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
-import eu.kanade.tachiyomi.util.isNullOrUnsubscribed
+import eu.kanade.tachiyomi.util.lang.isNullOrUnsubscribed
 import rx.Observable
 import rx.Subscription
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.util.*
+import java.util.Date
 
 /**
  * Presenter of MangaInfoFragment.

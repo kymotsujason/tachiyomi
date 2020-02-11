@@ -21,8 +21,8 @@ import eu.kanade.tachiyomi.ui.reader.loader.DownloadPageLoader
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
-import eu.kanade.tachiyomi.util.DiskUtil
-import eu.kanade.tachiyomi.util.ImageUtil
+import eu.kanade.tachiyomi.util.storage.DiskUtil
+import eu.kanade.tachiyomi.util.system.ImageUtil
 import rx.Completable
 import rx.Observable
 import rx.Subscription
@@ -32,7 +32,7 @@ import timber.log.Timber
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
-import java.util.*
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 /**
@@ -90,7 +90,7 @@ class ReaderPresenter(
 
         val chaptersForReader =
                 if (preferences.skipRead()) {
-                    var list = dbChapters.filter { it -> !it.read }.toMutableList()
+                    val list = dbChapters.filter { !it.read }.toMutableList()
                     val find = list.find { it.id == chapterId }
                     if (find == null) {
                         list.add(selectedChapter)
@@ -319,7 +319,7 @@ class ReaderPresenter(
         selectedChapter.chapter.last_page_read = page.index
         if (selectedChapter.pages?.lastIndex == page.index) {
             selectedChapter.chapter.read = true
-            updateTrackLastChapterRead()
+            updateTrackChapterRead(selectedChapter)
             enqueueDeleteReadChapters(selectedChapter)
         }
 
@@ -554,21 +554,11 @@ class ReaderPresenter(
      * Starts the service that updates the last chapter read in sync services. This operation
      * will run in a background thread and errors are ignored.
      */
-    private fun updateTrackLastChapterRead() {
+    private fun updateTrackChapterRead(readerChapter: ReaderChapter) {
         if (!preferences.autoUpdateTrack()) return
-        val viewerChapters = viewerChaptersRelay.value ?: return
         val manga = manga ?: return
 
-        val currChapter = viewerChapters.currChapter.chapter
-        val prevChapter = viewerChapters.prevChapter?.chapter
-
-        // Get the last chapter read from the reader.
-        val lastChapterRead = if (currChapter.read)
-            currChapter.chapter_number.toInt()
-        else if (prevChapter != null && prevChapter.read)
-            prevChapter.chapter_number.toInt()
-        else
-            return
+        val chapterRead = readerChapter.chapter.chapter_number.toInt()
 
         val trackManager = Injekt.get<TrackManager>()
 
@@ -576,8 +566,8 @@ class ReaderPresenter(
                 .flatMapCompletable { trackList ->
                     Completable.concat(trackList.map { track ->
                         val service = trackManager.getService(track.sync_id)
-                        if (service != null && service.isLogged && lastChapterRead > track.last_chapter_read) {
-                            track.last_chapter_read = lastChapterRead
+                        if (service != null && service.isLogged && chapterRead > track.last_chapter_read) {
+                            track.last_chapter_read = chapterRead
 
                             // We wan't these to execute even if the presenter is destroyed and leaks
                             // for a while. The view can still be garbage collected.

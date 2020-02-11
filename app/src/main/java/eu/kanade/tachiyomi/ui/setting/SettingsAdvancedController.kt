@@ -2,8 +2,8 @@ package eu.kanade.tachiyomi.ui.setting
 
 import android.app.Dialog
 import android.os.Bundle
-import android.support.v7.preference.PreferenceScreen
 import android.view.View
+import androidx.preference.PreferenceScreen
 import com.afollestad.materialdialogs.MaterialDialog
 import com.bluelinelabs.conductor.RouterTransaction
 import com.bluelinelabs.conductor.changehandler.FadeChangeHandler
@@ -15,7 +15,11 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateService.Target
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
 import eu.kanade.tachiyomi.ui.library.LibraryController
-import eu.kanade.tachiyomi.util.toast
+import eu.kanade.tachiyomi.util.preference.onClick
+import eu.kanade.tachiyomi.util.preference.preference
+import eu.kanade.tachiyomi.util.preference.summaryRes
+import eu.kanade.tachiyomi.util.preference.titleRes
+import eu.kanade.tachiyomi.util.system.toast
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers

@@ -8,7 +8,7 @@ import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
-import eu.kanade.tachiyomi.util.toast
+import eu.kanade.tachiyomi.util.system.toast
 import rx.Observable
 import rx.Subscription
 import rx.android.schedulers.AndroidSchedulers
@@ -91,8 +91,12 @@ class TrackPresenter(
                     .subscribe({ },
                             { error -> context.toast(error.message) }))
         } else {
-            db.deleteTrackForManga(manga, service).executeAsBlocking()
+            unregisterTracking(service)
         }
+    }
+
+    fun unregisterTracking(service: TrackService) {
+        db.deleteTrackForManga(manga, service).executeAsBlocking()
     }
 
     private fun updateRemote(track: Track, service: TrackService) {

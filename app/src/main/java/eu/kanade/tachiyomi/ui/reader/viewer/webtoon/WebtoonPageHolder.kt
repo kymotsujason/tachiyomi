@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.support.v7.widget.AppCompatButton
-import android.support.v7.widget.AppCompatImageView
 import android.view.Gravity
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -14,6 +12,8 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatButton
+import androidx.appcompat.widget.AppCompatImageView
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
@@ -29,10 +29,10 @@ import eu.kanade.tachiyomi.data.glide.GlideApp
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressBar
-import eu.kanade.tachiyomi.util.ImageUtil
-import eu.kanade.tachiyomi.util.dpToPx
-import eu.kanade.tachiyomi.util.gone
-import eu.kanade.tachiyomi.util.visible
+import eu.kanade.tachiyomi.util.system.ImageUtil
+import eu.kanade.tachiyomi.util.system.dpToPx
+import eu.kanade.tachiyomi.util.view.gone
+import eu.kanade.tachiyomi.util.view.visible
 import rx.Observable
 import rx.Subscription
 import rx.android.schedulers.AndroidSchedulers

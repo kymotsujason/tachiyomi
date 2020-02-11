@@ -1,8 +1,9 @@
 package eu.kanade.tachiyomi.ui.setting
 
 import android.os.Build
-import android.support.v7.preference.PreferenceScreen
+import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.util.preference.*
 import eu.kanade.tachiyomi.data.preference.PreferenceKeys as Keys
 
 class SettingsReaderController : SettingsController() {

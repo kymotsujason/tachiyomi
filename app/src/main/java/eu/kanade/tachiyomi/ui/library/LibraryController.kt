@@ -4,17 +4,19 @@ import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
-import android.support.design.widget.TabLayout
-import android.support.v4.graphics.drawable.DrawableCompat
-import android.support.v4.widget.DrawerLayout
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.view.ActionMode
-import android.support.v7.widget.SearchView
 import android.view.*
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ActionMode
+import androidx.appcompat.widget.SearchView
+import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import com.bluelinelabs.conductor.ControllerChangeHandler
 import com.bluelinelabs.conductor.ControllerChangeType
 import com.f2prateek.rx.preferences.Preference
+import com.google.android.material.tabs.TabLayout
 import com.jakewharton.rxbinding.support.v4.view.pageSelections
 import com.jakewharton.rxbinding.support.v7.widget.queryTextChanges
 import com.jakewharton.rxrelay.BehaviorRelay
@@ -29,14 +31,15 @@ import eu.kanade.tachiyomi.ui.base.controller.NucleusController
 import eu.kanade.tachiyomi.ui.base.controller.SecondaryDrawerController
 import eu.kanade.tachiyomi.ui.base.controller.TabbedController
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
-import eu.kanade.tachiyomi.ui.category.CategoryController
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.manga.MangaController
 import eu.kanade.tachiyomi.ui.migration.MigrationController
-import eu.kanade.tachiyomi.util.inflate
-import eu.kanade.tachiyomi.util.toast
-import kotlinx.android.synthetic.main.library_controller.*
-import kotlinx.android.synthetic.main.main_activity.*
+import eu.kanade.tachiyomi.util.system.toast
+import eu.kanade.tachiyomi.util.view.inflate
+import kotlinx.android.synthetic.main.library_controller.empty_view
+import kotlinx.android.synthetic.main.library_controller.library_pager
+import kotlinx.android.synthetic.main.main_activity.drawer
+import kotlinx.android.synthetic.main.main_activity.tabs
 import rx.Subscription
 import timber.log.Timber
 import uy.kohesive.injekt.Injekt
@@ -91,6 +94,11 @@ class LibraryController(
      * Relay to notify the library's viewpager for updates.
      */
     val libraryMangaRelay: BehaviorRelay<LibraryMangaEvent> = BehaviorRelay.create()
+
+    /**
+     * Relay to notify the library's viewpager to select all manga
+     */
+    val selectAllRelay: PublishRelay<Int> = PublishRelay.create()
 
     /**
      * Number of manga per row in grid mode.
@@ -177,14 +185,12 @@ class LibraryController(
     override fun createSecondaryDrawer(drawer: DrawerLayout): ViewGroup {
         val view = drawer.inflate(R.layout.library_drawer) as LibraryNavigationView
         navView = view
-        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.END)
+        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
 
         navView?.onGroupClicked = { group ->
             when (group) {
                 is LibraryNavigationView.FilterGroup -> onFilterChanged()
                 is LibraryNavigationView.SortGroup -> onSortChanged()
-                is LibraryNavigationView.DisplayGroup -> reattachAdapter()
-                is LibraryNavigationView.BadgeGroup -> onDownloadBadgeChanged()
             }
         }
 
@@ -319,7 +325,7 @@ class LibraryController(
         val searchItem = menu.findItem(R.id.action_search)
         val searchView = searchItem.actionView as SearchView
 
-        if (!query.isEmpty()) {
+        if (query.isNotEmpty()) {
             searchItem.expandActionView()
             searchView.setQuery(query, true)
             searchView.clearFocus()
@@ -337,7 +343,11 @@ class LibraryController(
                     searchRelay.call(query)
                 }
 
-        searchItem.fixExpand()
+        searchItem.fixExpand(onExpand = { invalidateMenuOnExpand() })
+    }
+
+    fun search(query: String) {
+        this.query = query
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
@@ -348,26 +358,51 @@ class LibraryController(
         // Tint icon if there's a filter active
         val filterColor = if (navView.hasActiveFilters()) Color.rgb(255, 238, 7) else Color.WHITE
         DrawableCompat.setTint(filterItem.icon, filterColor)
+
+        // Display submenu
+        if (preferences.libraryAsList().getOrDefault()) {
+            menu.findItem(R.id.action_display_list).isChecked = true
+        } else {
+            menu.findItem(R.id.action_display_grid).isChecked = true
+        }
+        if (preferences.downloadBadge().getOrDefault()) {
+            menu.findItem(R.id.action_display_download_badge).isChecked = true
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.action_search -> expandActionViewFromInteraction = true
             R.id.action_filter -> {
-                navView?.let { activity?.drawer?.openDrawer(Gravity.END) }
+                navView?.let { activity?.drawer?.openDrawer(GravityCompat.END) }
             }
             R.id.action_update_library -> {
                 activity?.let { LibraryUpdateService.start(it) }
             }
-            R.id.action_edit_categories -> {
-                router.pushController(CategoryController().withFadeTransaction())
+
+            // Display submenu
+            R.id.action_display_grid -> {
+                item.isChecked = true
+                preferences.libraryAsList().set(false)
+                reattachAdapter()
             }
+            R.id.action_display_list -> {
+                item.isChecked = true
+                preferences.libraryAsList().set(true)
+                reattachAdapter()
+            }
+            R.id.action_display_download_badge -> {
+                item.isChecked = !item.isChecked
+                preferences.downloadBadge().set(item.isChecked)
+                onDownloadBadgeChanged()
+            }
+
             R.id.action_source_migration -> {
                 router.pushController(MigrationController().withFadeTransaction())
             }
-            else -> return super.onOptionsItemSelected(item)
         }
 
-        return true
+        return super.onOptionsItemSelected(item)
     }
 
     /**
@@ -402,6 +437,7 @@ class LibraryController(
             }
             R.id.action_move_to_category -> showChangeMangaCategoriesDialog()
             R.id.action_delete -> showDeleteMangaDialog()
+            R.id.action_select_all -> selectAllCategoryManga()
             else -> return false
         }
         return true
@@ -489,6 +525,12 @@ class LibraryController(
         }
     }
 
+    private fun selectAllCategoryManga() {
+        adapter?.categories?.getOrNull(library_pager.currentItem)?.id?.let {
+            selectAllRelay.call(it)
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_IMAGE_OPEN) {
             if (data == null || resultCode != Activity.RESULT_OK) return
@@ -497,9 +539,9 @@ class LibraryController(
 
             try {
                 // Get the file's input stream from the incoming Intent
-                activity.contentResolver.openInputStream(data.data).use {
+                activity.contentResolver.openInputStream(data.data ?: Uri.EMPTY).use {
                     // Update cover to selected file, show error if something went wrong
-                    if (presenter.editCoverWithStream(it, manga)) {
+                    if (it != null && presenter.editCoverWithStream(it, manga)) {
                         // TODO refresh cover
                     } else {
                         activity.toast(R.string.notification_cover_update_failed)

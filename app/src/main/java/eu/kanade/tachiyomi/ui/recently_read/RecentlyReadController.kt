@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.recently_read
 
-import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.History
@@ -12,8 +12,9 @@ import eu.kanade.tachiyomi.ui.base.controller.NucleusController
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.manga.MangaController
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
-import eu.kanade.tachiyomi.util.toast
-import kotlinx.android.synthetic.main.recently_read_controller.*
+import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.android.synthetic.main.recently_read_controller.empty_view
+import kotlinx.android.synthetic.main.recently_read_controller.recycler
 
 /**
  * Fragment that shows recently read manga.

@@ -9,7 +9,7 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
-import android.support.v4.app.NotificationCompat
+import androidx.core.app.NotificationCompat
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Category
@@ -29,14 +29,19 @@ import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.util.*
+import eu.kanade.tachiyomi.util.chapter.syncChaptersWithSource
+import eu.kanade.tachiyomi.util.lang.chop
+import eu.kanade.tachiyomi.util.system.isServiceRunning
+import eu.kanade.tachiyomi.util.system.notification
+import eu.kanade.tachiyomi.util.system.notificationBuilder
+import eu.kanade.tachiyomi.util.system.notificationManager
 import rx.Observable
 import rx.Subscription
 import rx.schedulers.Schedulers
 import timber.log.Timber
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.util.*
+import java.util.ArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -82,13 +87,15 @@ class LibraryUpdateService(
     /**
      * Cached progress notification to avoid creating a lot.
      */
-    private val progressNotification by lazy { NotificationCompat.Builder(this, Notifications.CHANNEL_LIBRARY)
-            .setContentTitle(getString(R.string.app_name))
-            .setSmallIcon(R.drawable.ic_refresh_white_24dp_img)
-            .setLargeIcon(notificationBitmap)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .addAction(R.drawable.ic_clear_grey_24dp_img, getString(android.R.string.cancel), cancelIntent)
+    private val progressNotificationBuilder by lazy {
+        notificationBuilder(Notifications.CHANNEL_LIBRARY) {
+            setContentTitle(getString(R.string.app_name))
+            setSmallIcon(R.drawable.ic_refresh_white_24dp)
+            setLargeIcon(notificationBitmap)
+            setOngoing(true)
+            setOnlyAlertOnce(true)
+            addAction(R.drawable.ic_close_white_24dp, getString(android.R.string.cancel), cancelIntent)
+        }
     }
 
     /**
@@ -161,7 +168,7 @@ class LibraryUpdateService(
      */
     override fun onCreate() {
         super.onCreate()
-        startForeground(Notifications.ID_LIBRARY_PROGRESS, progressNotification.build())
+        startForeground(Notifications.ID_LIBRARY_PROGRESS, progressNotificationBuilder.build())
         wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager).newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK, "LibraryUpdateService:WakeLock")
         wakeLock.acquire()
@@ -249,7 +256,6 @@ class LibraryUpdateService(
             else
                 db.getLibraryMangas().executeAsBlocking().distinctBy { it.id }
         }
-
         if (target == Target.CHAPTERS && preferences.updateOnlyNonCompleted()) {
             listToUpdate = listToUpdate.filter { it.status != SManga.COMPLETED }
         }
@@ -427,7 +433,7 @@ class LibraryUpdateService(
      * @param total the total progress.
      */
     private fun showProgressNotification(manga: Manga, current: Int, total: Int) {
-        notificationManager.notify(Notifications.ID_LIBRARY_PROGRESS, progressNotification
+        notificationManager.notify(Notifications.ID_LIBRARY_PROGRESS, progressNotificationBuilder
                 .setContentTitle(manga.title)
                 .setProgress(total, current, false)
                 .build())

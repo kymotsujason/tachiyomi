@@ -12,7 +12,7 @@ import eu.kanade.tachiyomi.extension.model.LoadResult
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceFactory
-import eu.kanade.tachiyomi.util.Hash
+import eu.kanade.tachiyomi.util.lang.Hash
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
@@ -173,7 +173,7 @@ internal object ExtensionLoader {
      */
     private fun getSignatureHash(pkgInfo: PackageInfo): String? {
         val signatures = pkgInfo.signatures
-        return if (signatures != null && !signatures.isEmpty()) {
+        return if (signatures != null && signatures.isNotEmpty()) {
             Hash.sha256(signatures.first().toByteArray())
         } else {
             null

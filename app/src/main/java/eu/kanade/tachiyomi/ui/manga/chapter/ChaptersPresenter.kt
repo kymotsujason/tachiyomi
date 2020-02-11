@@ -12,8 +12,8 @@ import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.source.LocalSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
-import eu.kanade.tachiyomi.util.isNullOrUnsubscribed
-import eu.kanade.tachiyomi.util.syncChaptersWithSource
+import eu.kanade.tachiyomi.util.chapter.syncChaptersWithSource
+import eu.kanade.tachiyomi.util.lang.isNullOrUnsubscribed
 import rx.Observable
 import rx.Subscription
 import rx.android.schedulers.AndroidSchedulers
@@ -109,8 +109,9 @@ class ChaptersPresenter(
                 .observeOn(AndroidSchedulers.mainThread())
                 .filter { download -> download.manga.id == manga.id }
                 .doOnNext { onDownloadStatusChange(it) }
-                .subscribeLatestCache(ChaptersController::onChapterStatusChange,
-                        { _, error -> Timber.e(error) })
+                .subscribeLatestCache(ChaptersController::onChapterStatusChange) {
+                    _, error -> Timber.e(error)
+                }
     }
 
     /**
@@ -278,7 +279,7 @@ class ChaptersPresenter(
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeFirst({ view, _ ->
-                    view.onChaptersDeleted()
+                    view.onChaptersDeleted(chapters)
                 }, ChaptersController::onChaptersDeletedError)
     }
 

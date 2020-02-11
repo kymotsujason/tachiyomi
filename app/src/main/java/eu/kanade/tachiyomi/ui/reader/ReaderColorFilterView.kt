@@ -1,7 +1,10 @@
 package eu.kanade.tachiyomi.ui.reader
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.util.AttributeSet
 import android.view.View
 
@@ -13,7 +16,7 @@ class ReaderColorFilterView(
     private val colorFilterPaint: Paint = Paint()
 
     fun setFilterColor(color: Int, filterMode: Int) {
-        colorFilterPaint.setColor(color)
+        colorFilterPaint.color = color
         colorFilterPaint.xfermode = PorterDuffXfermode(when (filterMode) {
             1 -> PorterDuff.Mode.MULTIPLY
             2 -> PorterDuff.Mode.SCREEN

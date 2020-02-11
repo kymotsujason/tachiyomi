@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.catalogue
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.SearchView
 import android.view.*
+import androidx.appcompat.widget.SearchView
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bluelinelabs.conductor.ControllerChangeHandler
 import com.bluelinelabs.conductor.ControllerChangeType
 import com.bluelinelabs.conductor.RouterTransaction
@@ -23,7 +23,7 @@ import eu.kanade.tachiyomi.ui.catalogue.global_search.CatalogueSearchController
 import eu.kanade.tachiyomi.ui.catalogue.latest.LatestUpdatesController
 import eu.kanade.tachiyomi.ui.setting.SettingsSourcesController
 import eu.kanade.tachiyomi.widget.preference.SourceLoginDialog
-import kotlinx.android.synthetic.main.catalogue_main_controller.*
+import kotlinx.android.synthetic.main.catalogue_main_controller.recycler
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -133,7 +133,7 @@ class CatalogueController : NucleusController<CataloguePresenter>(),
     /**
      * Called when item is clicked
      */
-    override fun onItemClick(position: Int): Boolean {
+    override fun onItemClick(view: View, position: Int): Boolean {
         val item = adapter?.getItem(position) as? SourceItem ?: return false
         val source = item.source
         if (source is LoginSource && !source.isLogged()) {
@@ -151,7 +151,7 @@ class CatalogueController : NucleusController<CataloguePresenter>(),
      * Called when browse is clicked in [CatalogueAdapter]
      */
     override fun onBrowseClick(position: Int) {
-        onItemClick(position)
+        onItemClick(view!!, position)
     }
 
     /**
@@ -211,9 +211,8 @@ class CatalogueController : NucleusController<CataloguePresenter>(),
                         .popChangeHandler(SettingsSourcesFadeChangeHandler())
                         .pushChangeHandler(FadeChangeHandler()))
             }
-            else -> return super.onOptionsItemSelected(item)
         }
-        return true
+        return super.onOptionsItemSelected(item)
     }
 
     /**

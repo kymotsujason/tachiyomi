@@ -12,7 +12,9 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
 import eu.kanade.tachiyomi.widget.SimpleTextWatcher
-import kotlinx.android.synthetic.main.pref_account_login.view.*
+import kotlinx.android.synthetic.main.pref_account_login.view.login
+import kotlinx.android.synthetic.main.pref_account_login.view.password
+import kotlinx.android.synthetic.main.pref_account_login.view.show_password
 import rx.Subscription
 import uy.kohesive.injekt.injectLazy
 
@@ -25,7 +27,7 @@ abstract class LoginDialogPreference(bundle: Bundle? = null) : DialogController(
 
     var requestSubscription: Subscription? = null
 
-    override fun onCreateDialog(savedState: Bundle?): Dialog {
+    override fun onCreateDialog(savedViewState: Bundle?): Dialog {
         val dialog = MaterialDialog.Builder(activity!!)
                 .customView(R.layout.pref_account_login, false)
                 .negativeText(android.R.string.cancel)

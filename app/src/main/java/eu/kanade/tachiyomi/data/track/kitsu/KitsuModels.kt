@@ -1,13 +1,14 @@
 package eu.kanade.tachiyomi.data.track.kitsu
 
-import android.support.annotation.CallSuper
+import androidx.annotation.CallSuper
 import com.github.salomonbrys.kotson.*
 import com.google.gson.JsonObject
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class KitsuSearchManga(obj: JsonObject) {
     val id by obj.byInt

@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.widget
 
-import android.support.v4.view.PagerAdapter
 import android.view.View
 import android.view.ViewGroup
+import androidx.viewpager.widget.PagerAdapter
 
 abstract class ViewPagerAdapter : PagerAdapter() {
 

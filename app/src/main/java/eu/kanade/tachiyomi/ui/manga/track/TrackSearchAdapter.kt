@@ -8,10 +8,10 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.glide.GlideApp
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
-import eu.kanade.tachiyomi.util.gone
-import eu.kanade.tachiyomi.util.inflate
+import eu.kanade.tachiyomi.util.view.gone
+import eu.kanade.tachiyomi.util.view.inflate
 import kotlinx.android.synthetic.main.track_search_item.view.*
-import java.util.*
+import java.util.ArrayList
 
 class TrackSearchAdapter(context: Context)
     : ArrayAdapter<TrackSearch>(context, R.layout.track_search_item, ArrayList<TrackSearch>()) {
@@ -19,7 +19,7 @@ class TrackSearchAdapter(context: Context)
     override fun getView(position: Int, view: View?, parent: ViewGroup): View {
         var v = view
         // Get the data item for this position
-        val track = getItem(position)
+        val track = getItem(position)!!
         // Check if an existing view is being reused, otherwise inflate the view
         val holder: TrackSearchHolder // view lookup cache stored in tag
         if (v == null) {

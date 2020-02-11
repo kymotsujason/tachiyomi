@@ -1,25 +1,27 @@
 package eu.kanade.tachiyomi.ui.reader
 
 import android.graphics.Color
-import android.support.annotation.ColorInt
-import android.support.design.widget.BottomSheetBehavior
-import android.support.design.widget.BottomSheetDialog
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
+import androidx.annotation.ColorInt
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.preference.getOrDefault
-import eu.kanade.tachiyomi.util.plusAssign
+import eu.kanade.tachiyomi.util.lang.plusAssign
 import eu.kanade.tachiyomi.widget.IgnoreFirstSpinnerListener
 import eu.kanade.tachiyomi.widget.SimpleSeekBarListener
 import kotlinx.android.synthetic.main.reader_color_filter.*
-import kotlinx.android.synthetic.main.reader_color_filter_sheet.*
+import kotlinx.android.synthetic.main.reader_color_filter_sheet.brightness_overlay
+import kotlinx.android.synthetic.main.reader_color_filter_sheet.color_overlay
 import rx.Subscription
 import rx.android.schedulers.AndroidSchedulers
 import rx.subscriptions.CompositeSubscription
 import uy.kohesive.injekt.injectLazy
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 /**
  * Color filter sheet to toggle custom filter and brightness overlay.
@@ -28,7 +30,7 @@ class ReaderColorFilterSheet(activity: ReaderActivity) : BottomSheetDialog(activ
 
     private val preferences by injectLazy<PreferencesHelper>()
 
-    private var behavior: BottomSheetBehavior<*>? = null
+    private var sheetBehavior: BottomSheetBehavior<*>? = null
 
     /**
      * Subscriptions used for this dialog
@@ -49,7 +51,7 @@ class ReaderColorFilterSheet(activity: ReaderActivity) : BottomSheetDialog(activ
         val view = activity.layoutInflater.inflate(R.layout.reader_color_filter_sheet, null)
         setContentView(view)
 
-        behavior = BottomSheetBehavior.from(view.parent as ViewGroup)
+        sheetBehavior = BottomSheetBehavior.from(view.parent as ViewGroup)
 
         // Initialize subscriptions.
         subscriptions += preferences.colorFilter().asObservable()
@@ -136,8 +138,8 @@ class ReaderColorFilterSheet(activity: ReaderActivity) : BottomSheetDialog(activ
 
     override fun onStart() {
         super.onStart()
-        behavior?.skipCollapsed = true
-        behavior?.state = BottomSheetBehavior.STATE_EXPANDED
+        sheetBehavior?.skipCollapsed = true
+        sheetBehavior?.state = BottomSheetBehavior.STATE_EXPANDED
     }
 
     override fun onDetachedFromWindow() {
@@ -221,7 +223,7 @@ class ReaderColorFilterSheet(activity: ReaderActivity) : BottomSheetDialog(activ
         // Set black overlay visibility.
         if (value < 0) {
             brightness_overlay.visibility = View.VISIBLE
-            val alpha = (Math.abs(value) * 2.56).toInt()
+            val alpha = (abs(value) * 2.56).toInt()
             brightness_overlay.setBackgroundColor(Color.argb(alpha, 0, 0, 0))
         } else {
             brightness_overlay.visibility = View.GONE

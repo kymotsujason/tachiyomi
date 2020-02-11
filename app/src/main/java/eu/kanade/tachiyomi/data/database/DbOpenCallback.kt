@@ -1,10 +1,7 @@
 package eu.kanade.tachiyomi.data.database
 
-import android.arch.persistence.db.SupportSQLiteDatabase
-import android.arch.persistence.db.SupportSQLiteOpenHelper
-import android.content.Context
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import eu.kanade.tachiyomi.data.database.tables.*
 
 class DbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {

@@ -9,7 +9,7 @@ import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import timber.log.Timber
 import uy.kohesive.injekt.injectLazy
-import java.util.*
+import java.util.ArrayList
 
 /**
  * Presenter of [DownloadController].
@@ -33,9 +33,9 @@ class DownloadPresenter : BasePresenter<DownloadController>() {
         downloadQueue.getUpdatedObservable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .map { ArrayList(it) }
-                .subscribeLatestCache(DownloadController::onNextDownloads, { _, error ->
+                .subscribeLatestCache(DownloadController::onNextDownloads) { _, error ->
                     Timber.e(error)
-                })
+                }
     }
 
     fun getDownloadStatusObservable(): Observable<Download> {
