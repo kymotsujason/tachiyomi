@@ -18,7 +18,7 @@ import eu.kanade.tachiyomi.util.lang.plusAssign
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.inflate
 import eu.kanade.tachiyomi.widget.AutofitRecyclerView
-import kotlinx.android.synthetic.main.library_category.view.swipe_refresh
+import kotlinx.android.synthetic.main.library_category.view.*
 import rx.subscriptions.CompositeSubscription
 import uy.kohesive.injekt.injectLazy
 

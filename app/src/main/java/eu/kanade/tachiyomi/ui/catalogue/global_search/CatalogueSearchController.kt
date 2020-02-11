@@ -11,7 +11,7 @@ import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.ui.base.controller.NucleusController
 import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.manga.MangaController
-import kotlinx.android.synthetic.main.catalogue_global_search_controller.recycler
+import kotlinx.android.synthetic.main.catalogue_global_search_controller.*
 
 /**
  * This controller shows and manages the different search result in global search.
@@ -129,10 +129,6 @@ open class CatalogueSearchController(
         super.onViewCreated(view)
 
         adapter = CatalogueSearchAdapter(this)
-
-        // Create recycler and set adapter.
-        recycler.layoutManager = LinearLayoutManager(view.context)
-        recycler.adapter = adapter
         adapter?.fastScroller = fast_scroller
     }
 

@@ -35,4 +35,4 @@
         app:fastScrollerBubbleEnabled="false"
         tools:visibility="visible"/>
 
-</android.support.design.widget.CoordinatorLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

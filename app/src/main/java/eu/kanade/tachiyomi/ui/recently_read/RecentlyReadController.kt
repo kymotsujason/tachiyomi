@@ -13,8 +13,7 @@ import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.manga.MangaController
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.util.system.toast
-import kotlinx.android.synthetic.main.recently_read_controller.empty_view
-import kotlinx.android.synthetic.main.recently_read_controller.recycler
+import kotlinx.android.synthetic.main.recently_read_controller.*
 
 /**
  * Fragment that shows recently read manga.

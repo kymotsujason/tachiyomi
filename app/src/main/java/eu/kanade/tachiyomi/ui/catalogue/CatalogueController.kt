@@ -23,7 +23,7 @@ import eu.kanade.tachiyomi.ui.catalogue.global_search.CatalogueSearchController
 import eu.kanade.tachiyomi.ui.catalogue.latest.LatestUpdatesController
 import eu.kanade.tachiyomi.ui.setting.SettingsSourcesController
 import eu.kanade.tachiyomi.widget.preference.SourceLoginDialog
-import kotlinx.android.synthetic.main.catalogue_main_controller.recycler
+import kotlinx.android.synthetic.main.catalogue_main_controller.*
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 

@@ -36,8 +36,7 @@ import eu.kanade.tachiyomi.util.view.inflate
 import eu.kanade.tachiyomi.util.view.snack
 import eu.kanade.tachiyomi.util.view.visible
 import eu.kanade.tachiyomi.widget.AutofitRecyclerView
-import kotlinx.android.synthetic.main.catalogue_controller.catalogue_view
-import kotlinx.android.synthetic.main.catalogue_controller.progress
+import kotlinx.android.synthetic.main.catalogue_controller.*
 import kotlinx.android.synthetic.main.main_activity.drawer
 import rx.Observable
 import rx.Subscription
