@@ -12,9 +12,7 @@ import eu.kanade.tachiyomi.extension.util.ExtensionInstallReceiver
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.source.SourceManager
-import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchNow
-import eu.kanade.tachiyomi.util.lang.launchUI
 import kotlinx.coroutines.async
 import rx.Observable
 import uy.kohesive.injekt.Injekt
@@ -146,16 +144,14 @@ class ExtensionManager(
      * Finds the available extensions in the [api] and updates [availableExtensions].
      */
     fun findAvailableExtensions() {
-        launchIO {
+        launchNow {
             val extensions: List<Extension.Available> = try {
                 api.findExtensions()
             } catch (e: Exception) {
                 emptyList()
             }
 
-            launchUI {
-                availableExtensions = extensions
-            }
+            availableExtensions = extensions
         }
     }
 
@@ -210,7 +206,7 @@ class ExtensionManager(
      *
      * @param extension The extension to be updated.
      */
-    fun updateExtension(extension: Extension.Installed): Observable<InstallStep>  {
+    fun updateExtension(extension: Extension.Installed): Observable<InstallStep> {
         val availableExt = availableExtensions.find { it.pkgName == extension.pkgName }
                 ?: return Observable.empty()
         return installExtension(availableExt)

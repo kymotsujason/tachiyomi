@@ -9,13 +9,17 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import androidx.core.graphics.ColorUtils
+import androidx.webkit.WebViewClientCompat
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
-import eu.kanade.tachiyomi.util.system.*
+import eu.kanade.tachiyomi.util.system.getResourceColor
+import eu.kanade.tachiyomi.util.system.openInBrowser
+import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.invisible
 import eu.kanade.tachiyomi.util.view.visible
 import kotlinx.android.synthetic.main.webview_activity.*
@@ -49,11 +53,12 @@ class WebViewActivity : BaseActivity() {
         }
 
         if (bundle == null) {
-            val source = sourceManager.get(intent.extras!!.getLong(SOURCE_KEY)) as? HttpSource ?: return
+            val source = sourceManager.get(intent.extras!!.getLong(SOURCE_KEY)) as? HttpSource
+                    ?: return
             val url = intent.extras!!.getString(URL_KEY) ?: return
             val headers = source.headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }
 
-            webview.checkVersion()
+            supportActionBar?.subtitle = url
 
             webview.settings.javaScriptEnabled = true
             webview.settings.userAgentString = source.headers["User-Agent"]
@@ -70,8 +75,8 @@ class WebViewActivity : BaseActivity() {
             }
 
             webview.webViewClient = object : WebViewClientCompat() {
-                override fun shouldOverrideUrlCompat(view: WebView, url: String): Boolean {
-                    view.loadUrl(url)
+                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                    view.loadUrl(request.url.toString())
                     return true
                 }
 
@@ -79,6 +84,7 @@ class WebViewActivity : BaseActivity() {
                     super.onPageFinished(view, url)
                     invalidateOptionsMenu()
                     title = view?.title
+                    supportActionBar?.subtitle = url
                     swipe_refresh.isEnabled = true
                     swipe_refresh?.isRefreshing = false
                 }
@@ -88,7 +94,7 @@ class WebViewActivity : BaseActivity() {
                     invalidateOptionsMenu()
                 }
 
-                override fun onPageCommitVisible(view: WebView?, url: String?) {
+                override fun onPageCommitVisible(view: WebView, url: String) {
                     super.onPageCommitVisible(view, url)
 
                     // Reset to top when page refreshes

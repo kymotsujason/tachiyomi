@@ -193,7 +193,7 @@ class CatalogueController : NucleusController<CataloguePresenter>(),
                 .subscribeUntilDestroy { performGlobalSearch(it.queryText().toString()) }
     }
 
-    fun performGlobalSearch(query: String){
+    fun performGlobalSearch(query: String) {
         router.pushController(CatalogueSearchController(query).withFadeTransaction())
     }
 
